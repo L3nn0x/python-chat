@@ -2,7 +2,7 @@ import socket
 import select
 from common.utils import *
 
-SIZE = 4
+SIZE = 4096
 
 def emptySocket(sock):
     input = [sock]
@@ -30,12 +30,13 @@ def send(sock, data):
 def receive(sock):
     data = sock.recv(SIZE).decode("latin1")
     size = atoi(data)
-    if size == 0:
+    if size <= 1:
         emptySocket(sock)
-        return ""
+        return None
     while len(data) < size and size - len(data) >= SIZE:
         data += sock.recv(SIZE).decode("latin1")
-    data += sock.recv(size - len(data)).decode("latin1")
-    return data[len(str(size)):]
+    if size > len(data):
+        data += sock.recv(size - len(data)).decode("latin1")
+    return data[len(str(size)):size - len(str(size)) + 1]
 
 
