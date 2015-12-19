@@ -1,59 +1,68 @@
-import socket
+import time
 import select
+import socket
 from client import Client
+from common.protocol import *
 
-def acceptNewConnection(sock):
-    rlist, wlist, xlist = select.select([sock], [], [], 0)
-    if sock not in rlist:
-        return None
-    newSocket, addr = sock.accept()
-    return Client(newSocket, addr)
+class   Server:
+    def __init__(self):
+        self.clients = []
+        self.maintenance = False
 
-def checkDisconnection(clients):
-    disconnected = []
-    for client in clients:
-        if not client.isAlive():
-            disconnected.append(client)
-    return disconnected
+    def addClient(self, sock, addr):
+        self.clients.append(Client(self, sock, addr))
+        self.clients[-1].start()
 
-def sendAll(clients, data):
-    for client in clients:
-        client.send(data)
+    def removeClient(self, client):
+        client.stop()
+        client.join()
+        self.clients.remove(client)
 
-def checkNewMessage(clients):
-    data = []
-    rlist, wlist, xlist = select.select([i.sock for i in clients], [], [], 0)
-    for client in clients:
-        if client.sock in rlist:
-            msg = client.receive()
-            if msg != None:
-                data.append((client, msg))
-    return data
+    def checkAlive(self):
+        for client in self.clients[:]:
+            if not client.connected:
+                self.removeClient(client)
+                print("A client disconnected")
 
-HOST = ''
-PORT = 1234
+    def close(self):
+        for client in self.clients:
+            client.stop()
+            client.join()
+
+    def sendall(self, data, encode = True):
+        for client in self.clients:
+            if client._nick:
+                client.send(data, encode)
+
+    def sendallexcept(self, _client, data, encode = True):
+        for client in self.clients:
+            if client != _client and client._nick:
+                client.send(data, encode)
+
+    def sendChannel(self, client, channel, data):
+        for client in self.clients:
+            if channel in client.channels:
+                client.send(protFormat(MSG, client.login, channel, data))
 
 listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-listensocket.bind((HOST, PORT))
+listensocket.bind(('', 1234))
 listensocket.setblocking(False)
 listensocket.listen(1)
 
-clients = []
+server = Server()
 
-while True:
-    client = acceptNewConnection(listensocket)
-    if client:
-        print("A new client connected from:", client.addr[0])
-        sendAll(clients, "Yay a new friend! :)")
-        clients.append(client)
-        client.send("HELLO")
-    for client in checkDisconnection(clients):
-        print("A client disconnected")
-        clients.remove(client)
-        sendAll(clients, "Oh no a friend just left :(")
-    for client, msg in checkNewMessage(clients):
-        print(client.addr, "sent:", msg)
-        if msg == "exit":
-            break
-listensocket.close()
+print("Launching")
+try:
+    while True:
+        rlist, wlist, xlist = select.select([listensocket], [], [], 1)
+        if listensocket in rlist:
+            sock, addr = listensocket.accept()
+            print("A new client connected")
+            server.addClient(sock, addr)
+        server.checkAlive()
+except:
+    pass
+
+print("Terminating")
+server.close()

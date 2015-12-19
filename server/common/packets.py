@@ -1,6 +1,7 @@
 import socket
 import select
 from common.utils import *
+from common.protocol import *
 
 SIZE = 4096
 
@@ -13,12 +14,14 @@ def emptySocket(sock):
         for s in inputReady:
             s.recv(SIZE)
 
-def send(sock, data):
+def send(sock, data, encode = True):
     size = len(data)
-    size += len(str(size))
-    byte = str(size)
-    byte += str(data)
-    byte = bytearray(byte, "latin1")
+    byte = list(str(size).encode("latin1"))
+    if encode:
+        byte += data.encode("latin1")
+    else:
+        byte += data
+    byte = bytearray(byte)
     packets = []
     while len(byte) >= SIZE:
         packets.append(byte[:SIZE])
@@ -33,10 +36,11 @@ def receive(sock):
     if size <= 1:
         emptySocket(sock)
         return None
+    data = data[len(str(size)):]
     while len(data) < size and size - len(data) >= SIZE:
         data += sock.recv(SIZE).decode("latin1")
     if size > len(data):
         data += sock.recv(size - len(data)).decode("latin1")
-    return data[len(str(size)):size - len(str(size)) + 1]
+    return data[:size + 1]
 
 
