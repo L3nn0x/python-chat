@@ -13,6 +13,12 @@ class   Packet:
         self.args.extend(args)
         self.kwargs.update(kwargs)
 
+    def get(self, key):
+        try:
+            return self.kwargs[key]
+        except KeyError:
+            return None
+
     def serialize(self):
         return pickle.dumps(self)
     
@@ -27,6 +33,7 @@ class   Packet:
             return None
 
 # Return True if the Packet was sent, False otherwise
+# Return False if the packet is too big
 def sendPacket(sock, packet):
     data = packet.serialize()
     size = len(data)
@@ -62,7 +69,6 @@ def recvPacket(sock):
             data = data + packet
         if size > len(data):
             packet = sock.recv(size - len(data))
-            return None
             if packet == '':
                 return None
             data = data + packet
