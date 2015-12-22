@@ -1,25 +1,22 @@
 import socket
 from client import Client
+from server import Server
 
 listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 listensocket.bind(('', 1234))
 listensocket.listen(1)
 
-clients = []
+server = Server()
 
 print("starting")
 while True:
     try:
         sock, addr = listensocket.accept()
-        clients.append(Client(sock, addr))
-        print("a new client connected from:", addr)
-        clients[-1].start()
+        server.newClient(sock, addr)
     except KeyboardInterrupt:
         break
 
 print("closing")
-for client in clients:
-    client.stop()
-    client.join()
+server.close()
 
 listensocket.close()
