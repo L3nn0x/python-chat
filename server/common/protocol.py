@@ -26,6 +26,7 @@ NOK = "NOK"                     # not ok packet
 CHAN = "CHAN"                   # send channel names (all of them) and people inside
 MSG = "MSG"                     # send a msg with source, dest and data
 
+# normal communication (if packet isn't good, deconnection)
 """Client connects: 
     - HELLO
                         - HELLO
