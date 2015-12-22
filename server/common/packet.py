@@ -45,23 +45,27 @@ def sendPacket(sock, packet):
             if sock.send(packet) != len(packet):
                 return False
         return True
-    except ConnectionResetError:
+    except (ConnectionResetError, BrokenPipeError):
         return False
 
 # Returns None if no packet was able to be received, otherwise returns the correctly formated Packet
 def recvPacket(sock):
-    size = int.from_bytes(sock.recv(SIZE_LENGTH), byteorder="big")
-    if size < 1:
+    try:
+        size = int.from_bytes(sock.recv(SIZE_LENGTH), byteorder="big")
+        if size < 1:
+            return None
+        data = bytes()
+        while len(data) < size and size - len(data) >= SIZE_NETWORK_PACKET:
+            packet = sock.recv(SIZE_NETWORK_PACKET)
+            if packet == '':
+                return None
+            data = data + packet
+        if size > len(data):
+            packet = sock.recv(size - len(data))
+            return None
+            if packet == '':
+                return None
+            data = data + packet
+        return Packet.deserialize(data)
+    except (ConnectionResetError, BrokenPipeError):
         return None
-    data = bytes()
-    while len(data) < size and size - len(data) >= SIZE_NETWORK_PACKET:
-        packet = sock.recv(SIZE_NETWORK_PACKET)
-        if packet == '':
-            return None
-        data = data + packet
-    if size > len(data):
-        packet = sock.recv(size - len(data))
-        if packet == '':
-            return None
-        data = data + packet
-    return Packet.deserialize(data)
