@@ -18,13 +18,18 @@ def channels(*channels):
 def msg(source, dest, msg):
     return Packet(MSG, source=source, destination=dest, data=msg)
 
+def people(people):
+    return Packet(PEOPLE, people=people)
+
 # protocol
 HELLO = "HELLO"                 # first packet sent
 CREDENTIALS = "CREDENTIALS"     # with login=<> and password=<> (encrypted)
 OK = "OK"                       # ok packet
 NOK = "NOK"                     # not ok packet
+PEOPLE = "PEOPLE"               # send all accounts names
 CHAN = "CHAN"                   # send channel names (all of them) and people inside
 MSG = "MSG"                     # send a msg with source, dest and data
+STATUS = "STATUS"               # send a client's status (send the login and the status : active, away)
 
 # normal communication (if packet isn't good, deconnection)
 """Client connects: 
