@@ -1,14 +1,12 @@
 import pickle
-from common.utils import atoi
 
 SIZE = 4096
-MAXPACKETSIZE = 65536
-SIZESIZE = 5
+SIZESIZE = 2
 
 class   Packet:
     def __init__(self, packetType, *args, **kwargs):
         self.packetType = packetType
-        self.args = args
+        self.args = list(args)
         self.kwargs = kwargs
 
     def append(self, *args, **kwargs):
@@ -17,6 +15,9 @@ class   Packet:
 
     def serialize(self):
         return pickle.dumps(self)
+    
+    def __str__(self):
+        return "Packet type: {}\nArgs: {}\nKwargs: {}".format(self.packetType, self.args, self.kwargs)
 
     @staticmethod
     def deserialize(data):
@@ -25,22 +26,21 @@ class   Packet:
 def sendPacket(sock, packet):
     data = packet.serialize()
     size = len(data)
-    if size >= MAXPACKETSIZE:
-        print("size too big:", size)
-        return
+    if size >= pow(256, SIZESIZE):
+        return False
     packets = []
     while len(data) > SIZE:
         packets.append(data[:SIZE])
         data = data[SIZE:]
     packets.append(data)
-    sock.sendall(str(size).encode("latin1"))
+    sock.sendall(size.to_bytes(SIZESIZE, byteorder="big"))
     for packet in packets:
         sock.sendall(packet)
+    return True
 
 def recvPacket(sock):
-    size = atoi(sock.recv(SIZESIZE).decode("latin1"))
+    size = int.from_bytes(sock.recv(SIZESIZE), byteorder="big")
     if size < 1:
-        print("size not good:", size)
         return None
     if size < SIZE:
         return Packet.deserialize(sock.recv(size))

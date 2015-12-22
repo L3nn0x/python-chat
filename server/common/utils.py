@@ -6,4 +6,6 @@ def atoi(s):
                 return int(s[:i])
             except:
                 return 0
+    if len(s) == 0:
+        return 0
     return int(s)
