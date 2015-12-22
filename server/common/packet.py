@@ -37,9 +37,12 @@ def sendPacket(sock, packet):
         packets.append(data[:SIZE_NETWORK_PACKET])
         data = data[SIZE_NETWORK_PACKET:]
     packets.append(data)
-    sock.sendall(size.to_bytes(SIZE_LENGTH, byteorder="big"))
+    sent = sock.send(size.to_bytes(SIZE_LENGTH, byteorder="big"))
+    if sent != SIZE_LENGTH:
+        return False
     for packet in packets:
-        sock.sendall(packet)
+        if sock.send(packet) != len(packet):
+            return False
     return True
 
 # Return None if no packet was able to be received, otherwise returns the correctly formated Packet
@@ -47,11 +50,15 @@ def recvPacket(sock):
     size = int.from_bytes(sock.recv(SIZE_LENGTH), byteorder="big")
     if size < 1:
         return None
-    if size < SIZE_NETWORK_PACKET:
-        return Packet.deserialize(sock.recv(size))
     data = bytes()
     while len(data) < size and size - len(data) >= SIZE_NETWORK_PACKET:
-        data = data + sock.recv(SIZE_NETWORK_PACKET)
+        packet = sock.recv(SIZE_NETWORK_PACKET)
+        if packet == '':
+            return None
+        data = data + packet
     if size > len(data):
-        data = data + sock.recv(size - len(data))
+        packet = sock.recv(size - len(data))
+        if packet == '':
+            return None
+        data = data + packet
     return Packet.deserialize(data)
