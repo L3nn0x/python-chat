@@ -37,15 +37,18 @@ def sendPacket(sock, packet):
         packets.append(data[:SIZE_NETWORK_PACKET])
         data = data[SIZE_NETWORK_PACKET:]
     packets.append(data)
-    sent = sock.send(size.to_bytes(SIZE_LENGTH, byteorder="big"))
-    if sent != SIZE_LENGTH:
-        return False
-    for packet in packets:
-        if sock.send(packet) != len(packet):
+    try:
+        sent = sock.send(size.to_bytes(SIZE_LENGTH, byteorder="big"))
+        if sent != SIZE_LENGTH:
             return False
-    return True
+        for packet in packets:
+            if sock.send(packet) != len(packet):
+                return False
+        return True
+    except ConnectionResetError:
+        return False
 
-# Return None if no packet was able to be received, otherwise returns the correctly formated Packet
+# Returns None if no packet was able to be received, otherwise returns the correctly formated Packet
 def recvPacket(sock):
     size = int.from_bytes(sock.recv(SIZE_LENGTH), byteorder="big")
     if size < 1:
