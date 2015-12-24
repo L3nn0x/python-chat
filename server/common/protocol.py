@@ -6,41 +6,41 @@ def hello():
 def ok():
     return Packet(OK)
 
-def nok():
-    return Packet(NOK)
+def nok(reason=""):
+    return Packet(NOK, reason=reason)
 
 def credentials(login, password):
     return Packet(CREDENTIALS, login=login, password=password)
 
-def channels(*channels):
-    return Packet(CHAN, *channels)
+def channels(**channels):
+    return Packet(CHAN, **channels)
 
 def msg(source, dest, msg):
     return Packet(MSG, source=source, destination=dest, data=msg)
-
-def people(people):
-    return Packet(PEOPLE, people=people)
 
 # protocol
 HELLO = "HELLO"                 # first packet sent
 CREDENTIALS = "CREDENTIALS"     # with login=<> and password=<> (encrypted)
 OK = "OK"                       # ok packet
 NOK = "NOK"                     # not ok packet
-PEOPLE = "PEOPLE"               # send all accounts names
-CHAN = "CHAN"                   # send channel names (all of them) and people inside
+CHAN = "CHAN"                   # send channel names (public ones) and people inside
+PROFILE = "PROFILE"             # send all accounts profiles or an updated one
 MSG = "MSG"                     # send a msg with source, dest and data
-STATUS = "STATUS"               # send a client's status (send the login and the status : active, away)
+EDIT = "EDIT"                   # edit/delete an already sent message (msg id, channel, new message)
 
 # normal communication (if packet isn't good, deconnection)
 """Client connects: 
     - HELLO
                         - HELLO
     - CREDENTIALS
-                        - OK|NOK
+                        - OK|NOK(reason)
+                        - PROFILES
                         - CHAN
-    - OK|NOK
-                        - (if NOK resend, else wait)
     - MSG
-                        - OK|NOK
-    - (if NOK resend, else continue)
+                        - OK|NOK(reason)
+    - (if NOK resend/reconnect, else continue)
+                        - PROFILE (updated profile)
+                        - MSG
+    - PROFILE
+                        - OK|NOK(reason)
 """
