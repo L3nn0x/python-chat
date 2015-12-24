@@ -44,7 +44,7 @@ while True:
         rlist, wlist, xlist = select.select([0, sock], [sock], [])
         if 0 in rlist:
             data = input()
-            packets.append(msg(login, 'eneral', data.rstrip('\n')))
+            packets.append(msg(login, 'general', data.rstrip('\n')))
         if sock in rlist:
             packet = recvPacket(sock)
             if not packet:
