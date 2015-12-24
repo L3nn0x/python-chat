@@ -30,7 +30,13 @@ class   Client(Thread):
 
     def run(self):
         while self.connected:
-            rlist, wlist, xlist = select.select([self.sock], [self.sock], [])
+            write = []
+            if len(self.wpackets):
+                write = [self.sock]
+            rlist, wlist, xlist = select.select([self.sock], write, [self.sock], 0.2)
+            if len(xlist):
+                print("Error with the socket:", self.addr)
+                self.stop()
             if len(rlist):
                 packet = recvPacket(self.sock)
                 if not packet:

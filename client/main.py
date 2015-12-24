@@ -7,7 +7,10 @@ def connection(sock, login, password):
     packets = [hello(), credentials(login, password)]
     sent = False
     while True:
-        rlist, wlist, xlist = select.select([sock], [sock], [])
+        write = []
+        if len(packets):
+            write = [sock]
+        rlist, wlist, xlist = select.select([sock], write, [])
         if len(wlist) and len(packets) and not sent:
             res = sendPacket(sock, packets[0])
             if not res:
@@ -31,8 +34,9 @@ def connection(sock, login, password):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect(('127.0.0.1', 1234))
 login = input("Login > ")
+password = input("Password > ")
 
-ok, res = connection(sock, login, 'test')
+ok, res = connection(sock, login, password)
 if not ok:
     print("Connection error:", res)
     exit(0)
@@ -41,7 +45,13 @@ packets = []
 
 while True:
     try:
-        rlist, wlist, xlist = select.select([0, sock], [sock], [])
+        write = []
+        if len(packets):
+            write = [sock]
+        rlist, wlist, xlist = select.select([0, sock], write, [sock], 0.2)
+        if len(xlist):
+            print("Error with the socket")
+            break
         if 0 in rlist:
             data = input()
             packets.append(msg(login, 'general', data.rstrip('\n')))
