@@ -8,7 +8,6 @@ class   Client(Thread):
     _CONNECT = 0
     _LOGIN = 1
     _NORMAL = 2
-    _CHANNELS = 3
     def __init__(self, parent, sock, addr):
         super().__init__()
         self.sock = sock
@@ -21,10 +20,10 @@ class   Client(Thread):
                 Client._CONNECT: self.connect,
                 Client._LOGIN: self.login,
                 Client._NORMAL: self.normal,
-                Client._CHANNELS: self.channels,
             }
         self.wpackets = deque()
         self.login = None
+        self.profile = None
 
     def run(self):
         while self.connected:
@@ -67,22 +66,27 @@ class   Client(Thread):
         if packet.get('password') == 'test':
             self.login = packet.get('login')
             self.send(ok())
-            self.send(channels(*self.chans))
-            self.state = Client._CHANNELS
-        else:
-            self.send(nok())
-
-    def channels(self, packet):
-        if packet.packetType != OK and packet.packetType != NOK:
-            self.stop()
-            return
-        elif packet.packetType == NOK:
-            self.send(channels(*self.chans))
-        else:
+            self.profile = {
+                    "nick": "Little pony",
+                    "status": "active",
+                    }
+            p = Packet(PROFILE)
+            p.kwargs[self.login] = self.profile
+            self.send(p)
+            chans = {}
+            for chan in self.chans:
+                chans[chan] = self.parent.getChannelNames(chan)
+            self.send(channels(**chans))
             self.state = Client._NORMAL
+        else:
+            self.send(nok("login or password mismatched"))
 
     def normal(self, packet):
         if packet.packetType == MSG:
+            if packet.get('destination') not in self.chans:
+                self.send(nok("This channel doesn't exist!"))
+                return
+            self.send(ok())
             self.parent.sendChannel(packet.get('destination'), packet)
 
     def stop(self):
