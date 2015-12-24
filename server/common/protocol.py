@@ -12,6 +12,7 @@ def nok(reason=""):
 def credentials(login, password):
     return Packet(CREDENTIALS, login=login, password=password)
 
+# TODO: send the history of each channel along
 def channels(**channels):
     return Packet(CHAN, **channels)
 
@@ -23,7 +24,7 @@ HELLO = "HELLO"                 # first packet sent
 CREDENTIALS = "CREDENTIALS"     # with login=<> and password=<> (encrypted)
 OK = "OK"                       # ok packet
 NOK = "NOK"                     # not ok packet
-CHAN = "CHAN"                   # send channel names (public ones) and people inside
+CHAN = "CHAN"                   # send channel names (public ones), people inside and the history
 PROFILE = "PROFILE"             # send all accounts profiles or an updated one
 MSG = "MSG"                     # send a msg with source, dest and data
 EDIT = "EDIT"                   # edit/delete an already sent message (msg id, channel, new message)
