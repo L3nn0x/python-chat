@@ -10,3 +10,6 @@ class   Channel:
     def addMessage(self, source, data):
         self.messages.append(Message(source, data))
         return len(self.messages) - 1
+
+    def getHistory(self):
+        return [(i, j.source, j.data) for i, j in enumerate(self.messages)]

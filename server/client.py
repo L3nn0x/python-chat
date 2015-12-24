@@ -23,7 +23,10 @@ class   Client(Thread):
             }
         self.wpackets = deque()
         self.login = None
-        self.profile = None
+        self.profile = {
+                'status': 'active',
+                'nick': 'Little pony',
+        }
 
     def run(self):
         while self.connected:
@@ -42,6 +45,8 @@ class   Client(Thread):
 
     def send(self, packet):
         if not self.connected:
+            return
+        if packet.packetType not in (HELLO, NOK) and not self.login:
             return
         self.wpackets.append(packet)
 
@@ -66,17 +71,16 @@ class   Client(Thread):
         if packet.get('password') == 'test':
             self.login = packet.get('login')
             self.send(ok())
-            self.profile = {
-                    "nick": "Little pony",
-                    "status": "active",
-                    }
-            p = Packet(PROFILE)
-            p.kwargs[self.login] = self.profile
-            self.send(p)
+            self.send(profile(**self.parent.getProfiles()))
+            self.parent.sendAllExcept(self.login, profile(**{self.login:self.profile}))
             chans = {}
             for chan in self.chans:
                 chans[chan] = self.parent.getChannelNames(chan)
             self.send(channels(**chans))
+            chans = {}
+            for chan in self.chans:
+                chans[chan] = self.parent.getChannelHistory(chan)
+            self.send(history(**chans))
             self.state = Client._NORMAL
         else:
             self.send(nok("login or password mismatched"))
@@ -86,6 +90,9 @@ class   Client(Thread):
             if packet.get('destination') not in self.chans:
                 self.send(nok("This channel doesn't exist!"))
                 return
+            elif packet.get('source') != self.login:
+                self.send(nok("You can't send messages as another person"))
+                return
             self.send(ok())
             self.parent.sendChannel(packet.get('destination'), packet)
 
@@ -94,7 +101,9 @@ class   Client(Thread):
             return
         self.connected = False
         for packet in list(self.wpackets):
-            print("sending")
             sendPacket(self.sock, self.wpackets.popleft())
         print("Client disconnected:", self.addr)
+        if self.login:
+            self.profile['status'] = "away"
+            self.parent.sendAllExcept(self.login, profile(**{self.login:self.profile}))
         self.sock.close()
