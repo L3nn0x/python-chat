@@ -14,8 +14,17 @@ class   Server:
         print("A new client connected:", addr)
         self.clients[-1].start()
 
+    def checkAlive(self):
+        for client in self.clients[:]:
+            if not client.connected or not client.isAlive():
+                if client.isAlive():
+                    client.stop()
+                    client.join()
+                self.clients.remove(client)
+
     def close(self):
         for client in self.clients:
+            print(client.login)
             client.stop()
             client.join()
 

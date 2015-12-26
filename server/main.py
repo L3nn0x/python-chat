@@ -3,15 +3,20 @@ from client import Client
 from server import Server
 
 listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+listensocket.settimeout(0.2)
 listensocket.bind(('', 1234))
-listensocket.listen(1)
+listensocket.listen(2)
 
 server = Server()
 
 print("starting")
 while True:
     try:
-        sock, addr = listensocket.accept()
+        try:
+            sock, addr = listensocket.accept()
+        except socket.timeout:
+            server.checkAlive()
+            continue
         server.newClient(sock, addr)
     except KeyboardInterrupt:
         break
