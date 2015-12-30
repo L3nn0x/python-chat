@@ -3,74 +3,50 @@ import select
 from common.protocol import *
 from common.packet import *
 
-def connection(sock, login, password):
-    packets = [hello(), credentials(login, password)]
-    sent = False
-    while True:
-        write = []
-        if len(packets):
-            write = [sock]
-        rlist, wlist, xlist = select.select([sock], write, [])
-        if len(wlist) and len(packets) and not sent:
-            res = sendPacket(sock, packets[0])
-            if not res:
-                return False, "Error while sending a packet"
-            sent = True
-        if len(rlist):
-            packet = recvPacket(sock)
-            if not packet:
-                return False, "Error while receiving a packet"
-            if packets[0].packetType == HELLO and packet.packetType != HELLO:
-                return False, "Error of protocol"
-            elif packets[0].packetType == HELLO and packet.packetType == HELLO:
-                sent = False
-                packets = packets[1:]
-            elif packets[0].packetType == CREDENTIALS:
-                if packet.packetType == NOK:
-                    return False, packet.get("reason")
-                else:
-                    return True, ""
+from client import Client
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect(('127.0.0.1', 1234))
-login = input("Login > ")
-password = input("Password > ")
+class   Parent:
+    def __init__(self):
+        self.client = Client(self, "127.0.0.1", 1234, "user", "test")
+        self.client.start()
+        self.msgs = 0
 
-ok, res = connection(sock, login, password)
-if not ok:
-    print("Connection error:", res)
-    exit(0)
+    def stop(self):
+        self.client.stop()
+        self.client.join()
 
-packets = []
+    def sendMsg(self, data):
+        if not len(data):
+            return
+        print("sending...")
+        self.msgs += 1
+        self.client.send(msg(self.client.login, 'general', data))
+
+    def crunch(self, packet):
+        print(packet)
+
+    def update(self):
+        if self.msgs and not self.client.sent:
+            print("sent")
+            self.msgs -= 1
+        if len(self.client.error):
+            print(self.client.error)
+            self.client.error = ""
+
+parent = Parent()
 
 while True:
     try:
-        write = []
-        if len(packets):
-            write = [sock]
-        rlist, wlist, xlist = select.select([0, sock], write, [sock], 0.2)
-        if len(xlist):
-            print("Error with the socket")
-            break
-        if 0 in rlist:
+        rlist = select.select([0], [], [], 0.2)[0]
+        if len(rlist):
             data = input()
-            packets.append(msg(login, 'general', data.rstrip('\n')))
-        if sock in rlist:
-            packet = recvPacket(sock)
-            if not packet:
-                print("Connection reset by peer")
-                break
-            if packet.packetType == MSG:
-                print("{} on {}(id:{}) sent: {}".format(packet.get('source'), packet.get('destination'), packet.get('id'), packet.get('data')))
-            else:
-                print(packet)
-        if len(wlist) and len(packets):
-            res = sendPacket(sock, packets[0])
-            if res:
-                packets = packets[1:]
-            else:
-                print("Error while sending:", packets[0])
+            parent.sendMsg(data)
+            print("#general >", end='', flush=True)
+        parent.update()
     except Exception as e:
         print("Exception:", e)
         break
-sock.close()
+    except KeyboardInterrupt:
+        break
+
+parent.stop()
