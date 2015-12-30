@@ -14,6 +14,9 @@ class   Server:
         print("A new client connected:", addr)
         self.clients[-1].start()
 
+    def checkUser(self, login, password):
+        return login == 'user'
+
     def checkAlive(self):
         for client in self.clients[:]:
             if not client.connected or not client.isAlive():

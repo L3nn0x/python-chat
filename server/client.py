@@ -35,19 +35,18 @@ class   Client(Thread):
                 write = [self.sock]
             rlist, wlist, xlist = select.select([self.sock], write, [self.sock], 0.2)
             if len(xlist):
-                print("Error with the socket:", self.addr)
-                self.stop()
+                self.stop("Error with the socket")
             if len(rlist):
                 packet = recvPacket(self.sock)
                 if not packet:
-                    self.stop()
+                    self.stop("Connection closed by remote peer")
                 else:
                     print("Client", self.addr, "sent:")
                     print(packet)
                     self.crunch(packet)
-            elif len(wlist) and len(self.wpackets):
+            if len(wlist) and len(self.wpackets):
                 if not sendPacket(self.sock, self.wpackets.popleft()):
-                    self.stop()
+                    self.stop("Error while sending a packet")
 
     def send(self, packet):
         if not self.connected:
@@ -60,21 +59,20 @@ class   Client(Thread):
         try:
             self.states[self.state](packet)
         except Exception as e:
-            print("Unknown error:", e)
-            self.stop()
+            self.stop("Unknown error: {}".format(e))
 
     def connect(self, packet):
         if packet.packetType != HELLO:
-            self.stop()
+            self.stop("Error of protocol: {}".format(packet))
             return
         self.send(hello())
         self.state = Client._LOGIN
     
     def login(self, packet):
         if packet.packetType != CREDENTIALS:
-            self.stop()
+            self.stop("Error of protocol: {}".format(packet))
             return
-        if packet.get('password') == 'test':
+        if self.parent.checkUser(packet.get('login'), packet.get('password')):
             self.login = packet.get('login')
             self.send(ok())
             self.send(profile(**self.parent.getProfiles()))
@@ -102,13 +100,15 @@ class   Client(Thread):
             self.send(ok())
             self.parent.sendChannel(packet.get('destination'), packet)
 
-    def stop(self):
+    def stop(self, error = ""):
         if not self.connected:
             return
         self.connected = False
         for packet in list(self.wpackets):
             sendPacket(self.sock, self.wpackets.popleft())
         print("Client disconnected:", self.addr)
+        if len(error):
+            print(error)
         if self.login:
             self.profile['status'] = "away"
             self.parent.sendAllExcept(self.login, profile(**{self.login:self.profile}))
