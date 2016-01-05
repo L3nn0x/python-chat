@@ -35,7 +35,7 @@ CHAN = "CHAN"                   # send channel names (public ones), people insid
 HISTORY = "HISTORY"             # send the history for each channel
 PROFILE = "PROFILE"             # send all accounts profiles or an updated one
 MSG = "MSG"                     # send a msg with source, dest and data
-EDIT = "EDIT"                   # edit/delete an already sent message (msg id, channel, new message)
+EDIT = "EDIT"                   # edit/delete an already sent message (msg id, channel, new message/None)
 
 # normal communication (if packet isn't good, deconnection)
 """Client connects: 
