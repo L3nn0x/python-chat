@@ -58,3 +58,7 @@ class   Channel(VerticalScrolledFrame):
         self.addMessage(source, data)
         self.messages[-1].sentUiLabel.set("received")
         self.messages[-1].id = id
+
+    def setHistory(self, history):
+        for msg in history:
+            self.getMessage(msg[1], msg[2], msg[0])

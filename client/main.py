@@ -27,6 +27,8 @@ class   Parent:
     def crunch(self, packet):
         if packet.packetType == MSG:
             self.window.channel.getMessage(packet.get('source'), packet.get('data'), packet.get('id'))
+        elif packet.packetType == HISTORY:
+            self.window.channel.setHistory(packet.kwargs["general"])
         print(packet)
 
 window = MainWindow()
