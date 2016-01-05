@@ -1,6 +1,5 @@
 import tkinter as tk
 from message import *
-from collections import defaultdict
 
 class   MainWindow(tk.Tk):
     def __init__(self):
@@ -9,7 +8,6 @@ class   MainWindow(tk.Tk):
         self.geometry("640x480")
         self.minsize(width=640, height=480)
         self.initUI()
-        self.channels = defaultdict(Channel)
 
     def initUI(self):
         self.sendFrame = tk.Frame(self)
