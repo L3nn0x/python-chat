@@ -23,7 +23,7 @@ class   Client(Thread):
         self.wpackets = deque()
         self.state = Client._HELLO
         self.loggued = False
-        self.sent = False
+        self.sent = deque()
         self.error = ""
         self.states = [
                 self.hello,
@@ -36,7 +36,6 @@ class   Client(Thread):
             self.stop("Error of protocol: {}".format(packet))
         else:
             self.send(credentials(self.login, self.password))
-            self.sent = False
             self.state += 1
 
     def credentials(self, packet):
@@ -44,15 +43,15 @@ class   Client(Thread):
             self.error = packet.reason
         elif packet.packetType == OK:
             self.loggued = True
-            self.sent = False
             self.state += 1
         else:
             self.stop("Error of protocol: {}".format(packet))
 
-    def send(self, packet):
+    # call it with None or the error message
+    def send(self, packet, callback=None):
         if not self.connected:
             return
-        self.wpackets.append(packet)
+        self.wpackets.append((packet, callback))
 
     def run(self):
         try:
@@ -66,10 +65,13 @@ class   Client(Thread):
             rlist, wlist, xlist = select.select([self.sock], write, [self.sock], 0.2)
             if len(xlist):
                 self.stop("Error with the socket")
-            if len(wlist) and len(self.wpackets) and not self.sent:
-                if not sendPacket(self.sock, self.wpackets.popleft()):
+            if len(wlist) and len(self.wpackets):
+                packet = self.wpackets.popleft()
+                if not sendPacket(self.sock, packet[0]):
                     self.stop("Error while sending a packet")
-                self.sent = True
+                    break
+                if self.state >= len(self.states):
+                    self.sent.append(packet)
                 self.error = ""
             if len(rlist):
                 packet = recvPacket(self.sock)
@@ -84,9 +86,14 @@ class   Client(Thread):
                 self.states[self.state](packet)
             else:
                 if packet.packetType == OK:
-                    self.sent = False
+                    p = self.sent.popleft()
+                    if p and p[1]:
+                        p[1](None)
                 elif packet.packetType == NOK:
+                    p = self.sent.popleft()
                     self.error = packet.get('reason')
+                    if p and p[1]:
+                        p[1](self.error)
                 else:
                     self.parent.crunch(packet)
         except Exception as e:
@@ -95,7 +102,7 @@ class   Client(Thread):
     def stop(self, error = ""):
         self.connected = False
         for packet in list(self.wpackets):
-            sendPacket(self.sock, self.wpackets.popleft())
+            sendPacket(self.sock, self.wpackets.popleft()[0])
         self.error = error
         if error:
             print(error)

@@ -5,11 +5,14 @@ from common.packet import *
 
 from client import Client
 
+from window import MainWindow
+
 class   Parent:
-    def __init__(self):
-        self.client = Client(self, "127.0.0.1", 1234, "user", "test")
+    def __init__(self, window, login, passwd):
+        self.client = Client(self, "127.0.0.1", 1234, login, passwd)
+        self.login = login
+        self.window = window
         self.client.start()
-        self.msgs = 0
 
     def stop(self):
         self.client.stop()
@@ -18,35 +21,16 @@ class   Parent:
     def sendMsg(self, data):
         if not len(data):
             return
-        print("sending...")
-        self.msgs += 1
-        self.client.send(msg(self.client.login, 'general', data))
+        callback = self.window.channel.addMessage(self.login, data)
+        self.client.send(msg(self.login, 'general', data), callback)
 
     def crunch(self, packet):
+        if packet.packetType == MSG:
+            self.window.channel.getMessage(packet.get('source'), packet.get('data'), packet.get('id'))
         print(packet)
 
-    def update(self):
-        if self.msgs and not self.client.sent:
-            print("sent")
-            self.msgs -= 1
-        if len(self.client.error):
-            print(self.client.error)
-            self.client.error = ""
-
-parent = Parent()
-
-while True:
-    try:
-        rlist = select.select([0], [], [], 0.2)[0]
-        if len(rlist):
-            data = input()
-            parent.sendMsg(data)
-            print("#general >", end='', flush=True)
-        parent.update()
-    except Exception as e:
-        print("Exception:", e)
-        break
-    except KeyboardInterrupt:
-        break
-
+window = MainWindow()
+parent = Parent(window, "user", "test")
+window.bind(parent.sendMsg)
+window.mainloop()
 parent.stop()
