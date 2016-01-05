@@ -21,15 +21,17 @@ class   Parent:
     def sendMsg(self, data):
         if not len(data):
             return
-        callback = self.window.channel.addMessage(self.login, data)
+        callback = self.window.getChannel("general").addMessage(self.login, data)
         self.client.send(msg(self.login, 'general', data), callback)
 
     def crunch(self, packet):
         if packet.packetType == MSG:
-            self.window.channel.getMessage(packet.get('source'), packet.get('data'), packet.get('id'))
+            self.window.getChannel(packet.get('destination')).getMessage(packet.get('source'), packet.get('data'), packet.get('id'))
         elif packet.packetType == HISTORY:
-            self.window.channel.setHistory(packet.kwargs["general"])
-        print(packet)
+            for name, history in packet.kwargs.items():
+                self.window.getChannel(name).setHistory(history)
+        else:
+            print(packet)
 
 window = MainWindow()
 parent = Parent(window, "user", "test")

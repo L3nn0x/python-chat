@@ -35,20 +35,16 @@ class   Message(tk.Frame):
 
 
 class   Channel(VerticalScrolledFrame):
-    def __init__(self, parent, name, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, True, *args, **kwargs)
         self.parent = parent
-        self.name = name
         self.messages = []
 
     def addMessage(self, source, data):
         self.messages.append(super().addWidget(Message, source, data))
         _id = len(self.messages)
-        self.messages[-1].pack()
+        self.messages[-1].pack(fill=tk.X)
         return lambda error: self.messages[_id - 1].sent(error)
-
-    def addHistory(self, history):
-        pass
 
     def getMessage(self, source, data, id):
         for msg in self.messages:
