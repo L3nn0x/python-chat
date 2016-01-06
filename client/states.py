@@ -3,6 +3,7 @@ import tkinter as tk
 class   State(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.parent = parent
 
     def _in(self, **kwargs):
         self.pack(**kwargs)
@@ -15,6 +16,7 @@ class   StateMachine:
     def __init__(self):
         self.states = []
         self.kwargs = None
+        self.callback = None
 
     def pack(self, **kwargs):
         self.kwargs = kwargs
