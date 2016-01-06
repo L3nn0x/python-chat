@@ -45,3 +45,7 @@ class   StateMachine:
                 self.states[-1]._in(**self.kwargs)
             else:
                 self.states[-1]._in()
+
+    def popAll(self, stop=0):
+        while len(self.states) > stop:
+            self.pop()

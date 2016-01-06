@@ -7,6 +7,7 @@ class   Cruncher:
     def __init__(self, window):
         self.window = window
         self.window.register(self.update)
+        self.window.registerAlive(self.isAlive)
         self.client = Client(self, "127.0.0.1", 1234)
         self.client.start()
         self.client.send(hello())
@@ -15,6 +16,13 @@ class   Cruncher:
                 HISTORY: self.history,
                 MSG: self.msg,
             }
+
+    def isAlive(self):
+        if not self.client.isAlive():
+            self.client = Client(self, "127.0.0.1", 1234)
+            self.client.start()
+            self.client.send(hello())
+            self.window.cleanStates()
 
     def update(self, data):
         if data[0] == LOGIN:

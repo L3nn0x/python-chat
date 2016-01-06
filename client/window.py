@@ -57,6 +57,10 @@ class   ChannelState(State):
         super()._in(**kwargs)
         self.entry.focus()
 
+    def _out(self):
+        self.channel.pack_forget()
+        super()._out()
+
 class   MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -68,6 +72,19 @@ class   MainWindow(tk.Tk):
         self.states.push(LoginState(self))
         self.states.pack(fill=tk.BOTH, expand=tk.YES)
         self.callback = None
+        self.callbackIsAlive = None
+        self.after(1000, self.checkAlive)
+
+    def registerAlive(self, callback):
+        self.callbackIsAlive = callback
+
+    def cleanStates(self):
+        self.states.popAll(1)
+
+    def checkAlive(self):
+        if self.callbackIsAlive:
+            self.callbackIsAlive()
+        self.after(1000, self.checkAlive)
 
     def notify(self, data):
         if self.callback:
