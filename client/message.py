@@ -22,6 +22,9 @@ class   Message(tk.Frame):
         self.dataUi.pack()
         self.sentUi.pack()
         self.sourceUi.pack()
+        def _test(e):
+            print(self.id)
+        self.bind("<Button-1>", _test)
 
     def sent(self, error = None):
         if not error:
