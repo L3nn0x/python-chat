@@ -15,7 +15,7 @@ class   Server:
         self.clients[-1].start()
 
     def checkUser(self, login, password):
-        return login == 'user'
+        return password == 'test'
 
     def checkAlive(self):
         for client in self.clients[:]:
