@@ -36,7 +36,7 @@ class   Message(tk.Frame):
 
 class   Channel(VerticalScrolledFrame):
     def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, True, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         self.parent = parent
         self.messages = []
 
