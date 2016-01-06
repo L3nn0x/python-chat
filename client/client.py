@@ -1,6 +1,6 @@
 import socket
 import select
-from threading import Thread
+from threading import Thread, Event
 
 from common.packet import *
 from common.protocol import *
@@ -25,6 +25,7 @@ class   Client(Thread):
         self.loggued = False
         self.sent = deque()
         self.error = ""
+        self.update = Event()
         self.states = [
                 self.hello,
                 self.credentials
@@ -40,9 +41,11 @@ class   Client(Thread):
 
     def credentials(self, packet):
         if packet.packetType == NOK:
-            self.error = packet.reason
+            self.error = packet.get('reason')
+            self.update.set()
         elif packet.packetType == OK:
             self.loggued = True
+            self.update.set()
             self.state += 1
         else:
             self.stop("Error of protocol: {}".format(packet))
@@ -104,6 +107,7 @@ class   Client(Thread):
         for packet in list(self.wpackets):
             sendPacket(self.sock, self.wpackets.popleft()[0])
         self.error = error
+        self.update.set()
         if error:
             print(error)
         self.sock.close()

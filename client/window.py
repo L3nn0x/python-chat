@@ -2,6 +2,38 @@ import tkinter as tk
 from message import *
 from states import *
 
+class   LoginState(State):
+    def __init__(self, parent, checker):
+        super().__init__(parent)
+        self.checker = checker
+        self.initUI()
+
+    def initUI(self):
+        self.loginLabel = tk.Label(self, text="Login:")
+        self.login = tk.Entry(self)
+        self.passwordLabel = tk.Label(self, text="Password:")
+        self.password = tk.Entry(self)
+        self.sendButton = tk.Button(self, text="Login", command=self.send)
+        self.error = tk.StringVar()
+        self.errorUi = tk.Label(self, textvariable=self.error)
+        self.loginLabel.pack()
+        self.login.pack()
+        self.passwordLabel.pack()
+        self.password.pack()
+        self.sendButton.pack()
+        self.errorUi.pack()
+        self.password.bind("<Return>", lambda e: self.send)
+        self.login.bind("<Return>", lambda e: self.send)
+
+    def send(self):
+        self.checker._login = self.login.get()
+        self.checker._password = self.password.get()
+        self.checker.login.set()
+
+    def _in(self, **kwargs):
+        super()._in(**kwargs)
+        self.login.focus()
+
 class   ChatState(State):
     def __init__(self, parent):
         super().__init__(parent)
