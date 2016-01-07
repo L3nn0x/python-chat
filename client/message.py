@@ -59,6 +59,9 @@ class   Channel(VerticalScrolledFrame):
         self.messages[-1].sentUiLabel.set("received")
         self.messages[-1].id = id
 
-    def setHistory(self, history):
+    def setHistory(self, history, profiles):
         for msg in history:
-            self.getMessage(msg[1], msg[2], msg[0])
+            try:
+                self.getMessage(profiles[msg[1]]['nick'], msg[2], msg[0])
+            except KeyError:
+                pass

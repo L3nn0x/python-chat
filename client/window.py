@@ -33,6 +33,10 @@ class   LoginState(State):
                 self.error.set("Error: {}".format(ok))
         self.parent.notify((LOGIN, self.loginUi.get(), self.passwordUi.get(), _update))
 
+    def update(self, dt):
+        self.error.set("")
+        return True
+
 class   ChannelState(State):
     def __init__(self, parent, channel):
         super().__init__(parent)
@@ -48,6 +52,9 @@ class   ChannelState(State):
         self.sendFrame.pack(side=tk.BOTTOM, fill=tk.X)
         self.channel.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
         self.entry.bind("<Return>", lambda e: self.send())
+
+    def update(self, dt):
+        return True
 
     def send(self):
         self.parent.notify((CHANNEL, self.channel.name, self.entry.get()))
@@ -84,6 +91,7 @@ class   MainWindow(tk.Tk):
     def checkAlive(self):
         if self.callbackIsAlive:
             self.callbackIsAlive()
+        self.states.update(1000)
         self.after(1000, self.checkAlive)
 
     def notify(self, data):

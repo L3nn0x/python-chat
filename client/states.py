@@ -5,6 +5,9 @@ class   State(tk.Frame):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
 
+    def update(self, dt):
+        return False
+
     def _in(self, **kwargs):
         self.pack(**kwargs)
         self.focus()
@@ -49,3 +52,8 @@ class   StateMachine:
     def popAll(self, stop=0):
         while len(self.states) > stop:
             self.pop()
+
+    def update(self, dt):
+        for state in reversed(self.states):
+            if not state.update(dt):
+                return
