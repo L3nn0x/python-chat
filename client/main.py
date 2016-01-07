@@ -8,7 +8,9 @@ class   Cruncher:
         self.window = window
         self.window.register(self.update)
         self.window.registerAlive(self.isAlive)
-        self.client = Client(self, "127.0.0.1", 1234)
+        self.ip = "127.0.0.1"
+        self.port = 1234
+        self.client = Client(self, self.ip, self.port)
         self.client.start()
         self.client.send(hello())
         self.login = None
@@ -21,7 +23,7 @@ class   Cruncher:
 
     def isAlive(self):
         if not self.client.isAlive():
-            self.client = Client(self, "127.0.0.1", 1234)
+            self.client = Client(self, self.ip, self.port)
             self.client.start()
             self.client.send(hello())
             self.window.cleanStates()
@@ -29,7 +31,14 @@ class   Cruncher:
     def update(self, data):
         if data[0] == LOGIN:
             data = data[1:]
-            self.client.send(credentials(data[0], data[1]), data[2])
+            self.ip = data[2]
+            self.port = int(data[3])
+            self.client.stop()
+            self.client.join()
+            self.client = Client(self, self.ip, self.port)
+            self.client.start()
+            self.client.send(hello())
+            self.client.send(credentials(data[0], data[1]), data[4])
             self.login = data[0]
         elif data[0] == CHANNEL:
             data = data[1:]

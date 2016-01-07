@@ -12,6 +12,16 @@ class   LoginState(State):
         self.initUI()
 
     def initUI(self):
+        self.ipLabel = tk.Label(self, text="IP:")
+        self.ip = tk.Entry(self)
+        self.ip.insert(tk.END, "127.0.0.1")
+        self.portLabel = tk.Label(self, text="Port:")
+        self.port = tk.Entry(self)
+        self.port.insert(tk.END, "1234")
+        self.port.pack(side=tk.BOTTOM)
+        self.portLabel.pack(side=tk.BOTTOM)
+        self.ip.pack(side=tk.BOTTOM)
+        self.ipLabel.pack(side=tk.BOTTOM)
         self.loginLabel = tk.Label(self, text="Username:")
         self.loginUi = tk.Entry(self)
         self.passwordLabel = tk.Label(self, text="Password:")
@@ -32,7 +42,7 @@ class   LoginState(State):
         def _update(ok):
             if ok:
                 self.error.set("Error: {}".format(ok))
-        self.parent.notify((LOGIN, self.loginUi.get(), self.passwordUi.get(), _update))
+        self.parent.notify((LOGIN, self.loginUi.get(), self.passwordUi.get(), self.ip.get(), self.port.get(), _update))
 
     def update(self, dt):
         self.error.set("")
