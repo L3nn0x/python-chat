@@ -33,6 +33,8 @@ class   Cruncher:
             self.login = data[0]
         elif data[0] == CHANNEL:
             data = data[1:]
+            if not len(data[1]):
+                return
             try:
                 c = self.window.getChannel(data[0]).addMessage(self.profiles[self.login]['nick'], data[1])
                 self.client.send(msg(self.login, data[0], data[1]), c)

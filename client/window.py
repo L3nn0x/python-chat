@@ -26,6 +26,7 @@ class   LoginState(State):
         self.errorLabel = tk.Label(self, textvariable=self.error)
         self.errorLabel.pack()
         self.passwordUi.bind("<Return>", lambda e: self.send())
+        self.loginUi.bind("<Return>", lambda e: self.passwordUi.focus())
 
     def send(self):
         def _update(ok):
@@ -37,6 +38,10 @@ class   LoginState(State):
         self.error.set("")
         return True
 
+    def _in(self, **kwargs):
+        super()._in(**kwargs)
+        self.loginUi.focus()
+
 class   ChannelState(State):
     def __init__(self, parent, channel):
         super().__init__(parent)
@@ -44,13 +49,13 @@ class   ChannelState(State):
         self.initUI()
 
     def initUI(self):
-        self.sendFrame = tk.Frame(self)
+        self.sendFrame = tk.Frame(self, bd=1)
         self.entry = tk.Entry(self.sendFrame)
         self.sendButton = tk.Button(self.sendFrame, text="Send", command=self.send)
         self.entry.pack(side=tk.LEFT, fill=tk.X, expand=tk.YES)
         self.sendButton.pack()
-        self.sendFrame.pack(side=tk.BOTTOM, fill=tk.X)
         self.channel.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
+        self.sendFrame.pack(side=tk.BOTTOM, fill=tk.X)
         self.entry.bind("<Return>", lambda e: self.send())
 
     def update(self, dt):
