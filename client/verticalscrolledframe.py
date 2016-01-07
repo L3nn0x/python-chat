@@ -18,6 +18,7 @@ class   VerticalScrolledFrame(tk.Frame):
             canvas.config(scrollregion="0 0 %s %s" % size)
             if interior.winfo_reqwidth() != canvas.winfo_width():
                 canvas.config(width=interior.winfo_reqwidth())
+            self.scrollDown()
         interior.bind("<Configure>", _configure_interior)
 
         def _configure_canvas(event):
@@ -28,12 +29,7 @@ class   VerticalScrolledFrame(tk.Frame):
         self.widgets = []
 
     def addWidget(self, widgetFactory, *args, **kwargs):
-        scroll = False
-        if int(self.canvas.yview()[1]) == 1 or not len(self.widgets):
-            scroll = True
         self.widgets.append(widgetFactory(self.interior, *args, **kwargs))
-        if scroll:
-            self.scrollDown()
         return self.widgets[-1]
 
     def scrollDown(self):
