@@ -25,7 +25,6 @@ class   Client(Thread):
         self.login = None
         self.profile = {
                 'status': 'active',
-                'nick': 'Little pony',
         }
 
     def run(self):
@@ -76,6 +75,7 @@ class   Client(Thread):
             self.login = packet.get('login')
             self.send(ok())
             self.send(profile(**self.parent.getProfiles()))
+            self.profile['nick'] = self.login
             self.parent.sendAllExcept(self.login, profile(**{self.login:self.profile}))
             chans = {}
             for chan in self.chans:
